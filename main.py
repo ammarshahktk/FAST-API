@@ -1,21 +1,55 @@
-import time
-import asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException,Depends,Header
+from jose import jwt
+from datetime import datetime, timedelta, timezone
 
 app = FastAPI()
 
-@app.get("/")
-async def home():
-    await asyncio.sleep(3)
+SECRET_KEY = "mysecret"
+
+ALGORITHM = "HS256"
+
+# Create Token
+def create_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=30)
+    to_encode.update({
+        "exp":expire
+    })
+    token = jwt.encode(to_encode,SECRET_KEY,algorithm=ALGORITHM)
+
+    return token
+
+# Login API (Token Generate)
+@app.post("/login")
+def login(username:str, password:str):
+    if username != "admin" or password != "1234":
+        raise HTTPException(
+            status_code= 401,
+            detail= "Invalid Username or password"
+        )
+    token = create_token({
+        "sub":username
+    })
     return{
-        "message": "Async API"
+        "access_token": token
     }
 
+# Token Verification
+def verify_token(token:str = Header(None)):
+    try:
+        payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
+        return payload
+    except:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or Expire Token"
+        )
 
-# def task():
-#     time.sleep(3)
-#     return "Done"
 
-# async def task():
-#     await asyncio.sleep(3)
-#     return "Done"
+#protected Route:
+@app.get("/secure")
+def secure_data(user = Depends(verify_token)):
+    return{
+        "message": "Secure Data Accessed",
+        "user" : user
+    }
