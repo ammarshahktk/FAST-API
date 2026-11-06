@@ -1,21 +1,39 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException,Request
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-# Home Route
-@app.get("/")
-def home():
-    return {"message":"Welcome to FastAPI"} 
+class UserNOtFoundException(Exception):
+    def __init__(self,name:str):
+        self.name = name
 
-# About Route
-@app.get("/about")
-def about():
-    return {"message":"This is About Page"} 
+@app.exception_handler(UserNOtFoundException)
+def user_not_found_handler(request:Request, exc:UserNOtFoundException):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "status":"error",
+            "message":f"User {exc.name} not found"
+        }
+    )
 
-# Users Route
-@app.get("/users")
-def users():
-    return {
-        "users": ["Ammar", "Waris", "Arbab"]
-    } 
+@app.get("/user/{name}")
+def get_user(name:str):
+    if name != "Ammar":
+        raise UserNOtFoundException(name)
+    return{
+        "name":name
+    }
 
+
+# @app.get("/user/{user_id}")
+# def get_user(user_id:int):
+#     if user_id != 1:
+#         raise HTTPException(
+#             status_code=404,
+#             detail="User Not Found"
+#         )
+#     return {
+#         "id":1,
+#         "name":"Ammar"
+#     }
