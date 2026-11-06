@@ -1,21 +1,35 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 app = FastAPI()
 
-# Home Route
-@app.get("/")
-def home():
-    return {"message":"Welcome to FastAPI"} 
+users = []
 
-# About Route
-@app.get("/about")
-def about():
-    return {"message":"This is About Page"} 
+class User(BaseModel):
+    name: str
+    age : int
 
-# Users Route
-@app.get("/users")
-def users():
-    return {
-        "users": ["Ammar", "Waris", "Arbab"]
-    } 
+
+@app.post("/user")
+def create_user(user: User):
+    users.append(user)
+    return{
+        "message" : "User Created",
+        "data": user
+    }
+
+
+@app.put("/users/{user_id}")
+def updated_user(user_id:int, user:User,notify:bool = False):
+    if user_id < len(users):
+        users[user_id]=user
+
+        return{
+            "message" : "User Updated",
+            "notify": notify,
+            "data": user
+        }
+    return{
+        "error": "User not found"
+    }
 
