@@ -1,21 +1,15 @@
 from fastapi import FastAPI
+from pydantic import BaseModel 
 
 app = FastAPI()
+class User(BaseModel):
+    name:str
+    age:int
 
-# Home Route
-@app.get("/")
-def home():
-    return {"message":"Welcome to FastAPI"} 
+@app.post("/create-user")
+def create_user(user:User):
+    return{
+        "message": "User Created",
+        "Data" : user 
 
-# About Route
-@app.get("/about")
-def about():
-    return {"message":"This is About Page"} 
-
-# Users Route
-@app.get("/users")
-def users():
-    return {
-        "users": ["Ammar", "Waris", "Arbab"]
-    } 
-
+    }
