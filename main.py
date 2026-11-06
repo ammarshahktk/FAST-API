@@ -1,21 +1,29 @@
-from fastapi import FastAPI
+# Q- What is Middle Ware
+# A- A function which is between the request of user and respose of developer is called Middle ware
+
+from fastapi import FastAPI, Request
+import time
 
 app = FastAPI()
 
-# Home Route
-@app.get("/")
-def home():
-    return {"message":"Welcome to FastAPI"} 
+@app.middleware("http")
+async def log_middleware(request:Request,call_next):
+    start_time = time.time()
 
-# About Route
-@app.get("/about")
-def about():
-    return {"message":"This is About Page"} 
+    response = await call_next(request)
 
-# Users Route
-@app.get("/users")
-def users():
-    return {
-        "users": ["Ammar", "Waris", "Arbab"]
-    } 
+    process_time = time.time() - start_time
 
+    print(f"Path: {request.url.path} | Time: {process_time}")
+
+    return response
+
+# @app.middleware("http")
+# async def  my_middleware(request:Request,call_next):
+#     print("Request Recieved")
+
+#     response = await call_next(request)
+
+#     print("Respose Sent")
+
+#     return response
