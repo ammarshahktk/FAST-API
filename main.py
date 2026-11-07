@@ -1,34 +1,35 @@
+# IN python code 
 # import requests
+# from bs4 import BeautifulSoup
 
-# response = requests.get("https://jsonplaceholder.typicode.com/posts")
+# url = "http://example.com"
 
-# data = response.json()
-# print(data[:2])
+# response = requests.get(url)
 
+# soup = BeautifulSoup(requests.text,"html.parser")
 
-from fastapi import FastAPI,HTTPException
+# print(soup.title.text)
+
+# IN FAST API
+
+from fastapi import FastAPI
 import requests
+from bs4 import BeautifulSoup
 
 app = FastAPI()
 
-#GET ALL DATA
-
-@app.get("/post")
-def get_posts():
-    url = "https://jsonplaceholder.typicode.com/posts"
-    response = requests.get(url)
-    return response.json()
-
-#GET SINGLE DATA
-@app.get("/post/{post_id}")
-def get_post(post_id:int):
-    url = f"https://jsonplaceholder.typicode.com/posts/{post_id}"
+@app.get("/news")
+def get_news():
+    url = "https://www.dawn.com/"
 
     response = requests.get(url)
+    soup = BeautifulSoup(response.text, "html.parser")
 
-    if response.status_code != 200:
-        raise HTTPException(
-            status_code=404,
-            detail="Page Not Found Contact Arbab"
-        )
-    return response.json()
+    title = []
+
+    for item in soup.find_all("a",class_="story__link"  ):
+        title.append(item.text)
+
+    return{
+        "news": title[:5]
+    }
