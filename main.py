@@ -1,56 +1,29 @@
-# IN python code 
-# import requests
-# from bs4 import BeautifulSoup
-
-# url = "http://example.com"
-
-# response = requests.get(url)
-
-# soup = BeautifulSoup(requests.text,"html.parser")
-
-# print(soup.title.text)
-
-# IN FAST API
-
-from fastapi import FastAPI
-import requests
-from bs4 import BeautifulSoup
-import time
+from fastapi import FastAPI,Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
-cache_data = []
-last_fetch = 0
+# Limiter Setter:
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
 
-@app.get("/news")
-def get_news():
-    global cache_data, last_fetch
+# Error Handle:
+@app.exception_handler(RateLimitExceeded)
+def rate_limit_handler(requsest:Request, exc:RateLimitExceeded):
+    return JSONResponse(
+        status_code= 429,
+        content={
+            "detail": "Too many Requests"
+        }
+    )
 
-    start = time.time()
-
-    if time.time() - last_fetch >60:
-        print("Fetching Fresh Data")
-
-        url = "https://news.ycombinator.com/"
-
-        response = requests.get(url)
-
-        soup = BeautifulSoup(response.text,"html.parser")
-
-        cache_data = [
-            item.text for item in soup.find_all("span", class_="titleline")
-        ]
-
-        last_fetch = time.time()
-
-    else:
-        print("Using cache data")
-
-    end = time.time()
-    time_taken = round(end-start,4)
-    print("Time taken : ", time_taken)
-
+# Applying Rate Limiter API:
+@app.get("/data")
+@limiter.limit("5/minute")
+def get_data(request:Request):
     return{
-        "time_taken":time_taken,
-        "data":cache_data[:5]
+        "message": "Success"
     }
