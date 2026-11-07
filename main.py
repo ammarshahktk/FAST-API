@@ -7,6 +7,9 @@ app = FastAPI()
 origins = [
     "http://127.0.0.1:5500/"
 ]
+
+SECRECT_KEY = "mysecret"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins, # Allowed Front end
